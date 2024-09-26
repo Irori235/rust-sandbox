@@ -1,6 +1,8 @@
 // Referred to "Welcome to Comprehensive Rust - Exercise: Binary Tree"
 // https://google.github.io/comprehensive-rust/smart-pointers/exercise.html
 
+use std::cmp::Ordering;
+
 /// A node in the binary tree.
 #[derive(Debug)]
 struct Node<T: Ord> {
@@ -21,23 +23,33 @@ pub struct BinaryTree<T: Ord> {
     root: Subtree<T>,
 }
 
+impl<T: Ord> Default for BinaryTree<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Ord> BinaryTree<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             root: Subtree::new(),
         }
     }
 
-    fn insert(&mut self, value: T) {
+    pub fn insert(&mut self, value: T) {
         self.root.insert(value);
     }
 
-    fn has(&self, value: &T) -> bool {
+    pub fn has(&self, value: &T) -> bool {
         self.root.has(value)
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.root.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -56,28 +68,22 @@ impl<T: Ord> Subtree<T> {
                     right: Subtree::new(),
                 }))
             }
-            Some(ref mut node) => {
-                if value < node.value {
-                    node.left.insert(value);
-                } else if value > node.value {
-                    node.right.insert(value);
-                }
-            }
+            Some(ref mut node) => match value.cmp(&node.value) {
+                Ordering::Less => node.left.insert(value),
+                Ordering::Greater => node.right.insert(value),
+                Ordering::Equal => {}
+            },
         }
     }
 
     fn has(&self, value: &T) -> bool {
         match self.0 {
             None => false,
-            Some(ref node) => {
-                if *value == node.value {
-                    true
-                } else if *value < node.value {
-                    node.left.has(value)
-                } else {
-                    node.right.has(value)
-                }
-            }
+            Some(ref node) => match value.cmp(&node.value) {
+                Ordering::Equal => true,
+                Ordering::Less => node.left.has(value),
+                Ordering::Greater => node.right.has(value),
+            },
         }
     }
 
